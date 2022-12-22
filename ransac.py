@@ -1,5 +1,6 @@
 import numpy as np
 
+
 class HomographyModel:
     def fit(self, samples):
         """
@@ -11,17 +12,17 @@ class HomographyModel:
             The input samples, an Nx4 array where each row represents a pair of corresponding points in the form (x1, y1, x2, y2).
         """
         # Create the matrix A for the linear system Ah = 0
-        A = np.zeros((len(samples), 8))
+        A = np.zeros((len(samples) * 2, 9))
         for i, (x1, y1, x2, y2) in enumerate(samples):
-            A[i] = [x1, y1, 1, 0, 0, 0, -x2*x1, -x2*y1]
-            A[i+1] = [0, 0, 0, x1, y1, 1, -y2*x1, -y2*y1]
-        
+            A[i * 2] = [x1, y1, 1, 0, 0, 0, -x2 * x1, -x2 * y1, -x2]
+            A[i * 2 + 1] = [0, 0, 0, x1, y1, 1, -y2 * x1, -y2 * y1, -y2]
+
         # Compute the SVD of A
         U, S, Vt = np.linalg.svd(A)
-        
+
         # The homography matrix is the last column of Vt
         self.homography = Vt[-1].reshape(3, 3)
-    
+
     def predict(self, data):
         """
         Predict the output values for a set of data points.
@@ -38,13 +39,13 @@ class HomographyModel:
         """
         # Add a third coordinate to the data points
         data_homogeneous = np.hstack((data, np.ones((len(data), 1))))
-        
+
         # Transform the data points using the homography matrix
         transformed = np.dot(self.homography, data_homogeneous.T).T
-        
+
         # Normalize the transformed points
         transformed[:, :2] /= transformed[:, 2:]
-        
+
         return transformed[:, :2]
 
 
@@ -76,32 +77,33 @@ def ransac(data, model_class, min_samples, residual_threshold, max_trials):
     """
     best_model = None
     best_inliers = None
-    
+
     # Perform max_trials iterations
     for trial in range(max_trials):
         # Randomly select min_samples points from the data
         indices = np.random.choice(len(data), min_samples, replace=False)
         samples = data[indices]
-        
         # Fit a model to the samples
         model = model_class()
         model.fit(samples)
-        
+        data_picture = data[:, 2:]
+        data_template = data[:, :2]
+
         # Use the model to predict the remaining data points
-        predictions = model.predict(data)
-        
+        predictions = model.predict(data_picture)
+
         # Compute the residuals between the predictions and the actual data points
-        residuals = predictions - data
-        
+        residuals = predictions - data_template
+        distance_vector = np.array([np.linalg.norm(i) for i in residuals])
+
         # Count the number of inliers (samples that have a small residual)
-        inliers = np.sum(np.abs(residuals) < residual_threshold)
-        
+        inliers = np.sum(distance_vector < residual_threshold)
+
         # If the model has more inliers than the current best model, update the best model
         if best_inliers is None or inliers > best_inliers:
             best_model = model
             best_inliers = inliers
-    
     # Return the best fit model and the inliers
-    return best_model, np.where(np.abs(residuals) < residual_threshold)[0]
-
-
+    print(best_inliers)
+    filter = np.where(distance_vector < residual_threshold, True, False)
+    return model.homography, filter

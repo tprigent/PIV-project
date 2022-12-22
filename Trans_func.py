@@ -20,6 +20,7 @@ def transform_im(H, frame):
     # Create the original image matrix
     frame = cv2.imread(frame)
 
+
     # Create variables that calculate the dimensions of the frames
     n_old, m_old, x_old = np.shape(frame)
     n_new, m_new, x_new = tuple((H@np.array([n_old, m_old, 1])))
@@ -53,16 +54,16 @@ def transform_im(H, frame):
     return new_frame
 
 
-H = np.array([[2, 0, 0], [0, 1, 0], [0, 0, 1]])
-img = "004E-500x500.png"
-original_img = cv2.imread(img)
-transformed = transform_im(H, img)
-grey = cv2.cvtColor(transformed, cv2.COLOR_BGR2GRAY)
-print(np.array_equal(original_img, transformed))
-#open_cv = cv2.warpPerspective(frame, H, (1000, 1000))
-
-cv2.imshow("original", original_img)
-cv2.imshow("transed", transformed)
-#cv2.imshow("cv", open_cv )
-
-cv2.waitKey()
+# H = np.array([[2, 0, 0], [0, 1, 0], [0, 0, 1]])
+# img = "data/rgb0001.jpg"
+# original_img = cv2.imread(img)
+# transformed = transform_im(H, img)
+# grey = cv2.cvtColor(transformed, cv2.COLOR_BGR2GRAY)
+# print(np.array_equal(original_img, transformed))
+# #open_cv = cv2.warpPerspective(frame, H, (1000, 1000))
+#
+# cv2.imshow("original", original_img)
+# cv2.imshow("transed", transformed)
+# #cv2.imshow("cv", open_cv )
+#
+# cv2.waitKey()
