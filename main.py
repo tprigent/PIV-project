@@ -32,8 +32,8 @@ if __name__ == "__main__":
     # cv2.imshow('Matched Keypoints', result)
     cv2.imwrite('results/result_task_1.png', result)
 
-    # new_frame = transform_im(H, 'data/rgb0001.jpg')
-    # cv2.imwrite('results/result_after_im_transform.png', new_frame)
+    new_frame = transform_im(H, 'data/rgb0001.jpg')
+    cv2.imwrite('results/result_after_im_transform.png', new_frame)
 
 
     # cv2.waitKey(0)

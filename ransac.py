@@ -21,6 +21,7 @@ class HomographyModel:
         U, S, Vt = np.linalg.svd(A)
         # The homography matrix is the last column of V so the last row of Vt
         self.homography = Vt[-1].reshape(3, 3)
+        self.homography = self.homography/self.homography[2, 2]
 
     def predict(self, data):
         """
