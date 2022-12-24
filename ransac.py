@@ -17,11 +17,9 @@ class HomographyModel:
             A[i * 2] = [x1, y1, 1, 0, 0, 0, -x2 * x1, -x2 * y1, -x2]
             A[i * 2 + 1] = [0, 0, 0, x1, y1, 1, -y2 * x1, -y2 * y1, -y2]
 
-
-
-        # Compute the SVD of A^T.A
-        U, S, Vt = np.linalg.svd(np.dot(np.transpose(A), A))
-        # The homography matrix is the last column of Vt
+        # Compute the SVD of A
+        U, S, Vt = np.linalg.svd(A)
+        # The homography matrix is the last column of V so the last row of Vt
         self.homography = Vt[-1].reshape(3, 3)
 
     def predict(self, data):

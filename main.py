@@ -15,8 +15,8 @@ if __name__ == "__main__":
     matches = kp_matching.brute_force_matcher(d_template, d_picture)
     samples = np.array([(kp_template[i].pt + kp_picture[j].pt) for (i, j) in matches])
     model = ransac.HomographyModel
-    max_trials = len(samples)*2
-    H, filter = ransac.ransac(samples, model, 4, 300, max_trials)
+    max_trials = len(samples)*30
+    H, filter = ransac.ransac(samples, model, 4, 150, max_trials)
     matches_matrix = np.array([i for i in matches])
     new_matches = matches_matrix[filter]
 
