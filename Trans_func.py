@@ -22,7 +22,7 @@ def transform_im(H, frame):
 
 
     # Create variables that calculate the dimensions of the frames
-    n_old, m_old, x_old = np.shape(frame)
+    n_old, m_old, _ = np.shape(frame)
     n_new, m_new, x_new = tuple((H@np.array([n_old, m_old, 1])))
     n_new, m_new = (int(n_new / x_new), int(m_new / x_new))
 
@@ -48,7 +48,7 @@ def transform_im(H, frame):
             x_old, y_old = int(old_homo_coord[0] / old_homo_coord[2]), int(old_homo_coord[1] / old_homo_coord[2])
 
             # Set the pixel value
-            if x_old < n_old and y_old < m_old:
+            if 0 <= x_old < n_old and 0 <= y_old < m_old:
                 new_frame[i, j] = frame[x_old, y_old]
 
     return new_frame
