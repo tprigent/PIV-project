@@ -102,8 +102,11 @@ def ransac(data, model_class, min_samples, residual_threshold, max_trials):
         # If the model has more inliers than the current best model, update the best model
         if best_inliers is None or inliers > best_inliers:
             best_model = model
+            best_distance_vector = distance_vector
             best_inliers = inliers
     # Return the best fit model and the inliers
+
     print(best_inliers)
-    filter = np.where(distance_vector < residual_threshold, True, False)
-    return model.homography, filter
+    print(model.homography)
+    filter = np.where(best_distance_vector < residual_threshold, True, False)
+    return best_model.homography, filter
