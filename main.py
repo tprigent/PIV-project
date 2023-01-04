@@ -1,4 +1,6 @@
 import numpy as np
+
+import cleaning
 import ransac
 import sift_detect
 import kp_matching
@@ -6,26 +8,30 @@ import cv2  # for debug only
 from Trans_func import transform_im
 
 if __name__ == "__main__":
-
     # Extract key points and descriptors from images
-    kp_template, d_template = sift_detect.extract_kp_des('data/templateSNS.jpg', n_kpoints=200)
-    kp_picture, d_picture = sift_detect.extract_kp_des('data/rgb0001.jpg', n_kpoints=200)
+    kp_template, d_template = sift_detect.extract_kp_des('data/templateSNS.jpg', n_kpoints=500)
+    kp_picture, d_picture = sift_detect.extract_kp_des('data/rgb0001.jpg', n_kpoints=500)
 
     # Find matches between descriptors
-    matches = kp_matching.brute_force_matcher(d_template, d_picture)
-    samples = np.array([(kp_template[i].pt + kp_picture[j].pt) for (i, j) in matches])
-    model = ransac.HomographyModel
-    max_trials = len(samples)*30
-    H, filter = ransac.ransac(samples, model, 4, 150, max_trials)
-    matches_matrix = np.array([i for i in matches])
-    new_matches = matches_matrix[filter]
+    match_template, match_picture = kp_matching.distance_matcher(d_template, d_picture)
+    kp_t_match = [kp_template[int(i)] for i in match_template]
+    kp_p_match = [kp_picture[int(i)] for i in match_picture]
+
+    # Use RANSAC to select the best matches
+    homography_model = ransac.HomographyModel()
+    H, inliers_index = ransac.ransac(kp_t_match, kp_p_match, homography_model, n=4, k=2000, t=2, d=50)
+
+#    matches_matrix = np.array([i for i in matches])
+#    new_matches = matches_matrix[filter]
 
     ## DEBUG ONLY: show matched key points
 
     image1 = cv2.imread('data/templateSNS.jpg')
     image2 = cv2.imread('data/rgb0001.jpg')
-    new_matches = [cv2.DMatch(new_matches[i][0], new_matches[i][1], 0) for i in range(len(new_matches))]
-    result = cv2.drawMatches(image1, kp_template, image2, kp_picture, new_matches, None)
+    # new_matches = [cv2.DMatch(inliers_template[i].pt, inliers_picture[i].pt, 0) for i in range(len(inliers_template))]
+    matches = [cv2.DMatch(int(match_template[i]), int(match_picture[i]), 0) for i in inliers_index]
+
+    result = cv2.drawMatches(image1, kp_t_match, image2, kp_p_match, matches, None)
 
     # Show the result
 
@@ -34,7 +40,6 @@ if __name__ == "__main__":
 
     new_frame = transform_im(H, 'data/rgb0001.jpg')
     cv2.imwrite('results/result_after_im_transform.png', new_frame)
-
 
     # cv2.waitKey(0)
     # cv2.destroyAllWindows()

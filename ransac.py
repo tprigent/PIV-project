@@ -1,112 +1,121 @@
 import numpy as np
+import random
 
 
 class HomographyModel:
-    def fit(self, samples):
+    def fit(self, keypoints1, keypoints2):
         """
-        Fit a homography matrix to a set of samples.
-        
-        Parameters
-        ----------
-        samples: ndarray
-            The input samples, an Nx4 array where each row represents a pair of corresponding points in the form (x1, y1, x2, y2).
+        Fit a homography matrix to the given keypoints.
+
+        Parameters:
+            keypoints1 - a set of 2D keypoints in the form (x, y)
+            keypoints2 - a set of 2D keypoints in the form (x, y)
+
+        Returns:
+            H - a 3x3 homography matrix
         """
-        # Create the matrix A for the linear system Ah = 0
-        A = np.zeros((len(samples) * 2, 9))
-        for i, (x1, y1, x2, y2) in enumerate(samples):
-            A[i * 2] = [x1, y1, 1, 0, 0, 0, -x2 * x1, -x2 * y1, -x2]
-            A[i * 2 + 1] = [0, 0, 0, x1, y1, 1, -y2 * x1, -y2 * y1, -y2]
+        # Convert the keypoints to homogeneous coordinates
+        kpts1 = [keypoints1[i].pt for i in range(len(keypoints1))]
+        kpts2 = [keypoints2[i].pt for i in range(len(keypoints2))]
+        points1 = np.vstack((np.array(kpts1).T, np.ones(len(kpts1))))
+        points2 = np.vstack((np.array(kpts2).T, np.ones(len(kpts1))))
 
-        # Compute the SVD of A
-        U, S, Vt = np.linalg.svd(A)
-        # The homography matrix is the last column of V so the last row of Vt
-        self.homography = Vt[-1].reshape(3, 3)
-        self.homography = self.homography/self.homography[2, 2]
+        # Solve for the homography matrix using the least squares method
+        A = []
+        for i in range(points1.shape[1]):
+            x, y, w = points1[:, i]
+            u, v, _ = points2[:, i]
+            A.append([x, y, w, 0, 0, 0, -u * x, -u * y, -u])
+            A.append([0, 0, 0, x, y, w, -v * x, -v * y, -v])
+        A = np.asarray(A)
+        U, S, Vh = np.linalg.svd(A)
+        L = Vh[-1, :] / Vh[-1, -1]
+        H = L.reshape(3, 3)
 
-    def predict(self, data):
+        return H
+
+    def distance(self, H, keypoint1, keypoint2):
         """
-        Predict the output values for a set of data points.
-        
-        Parameters
-        ----------
-        data: ndarray
-            The input data, an Nx2 array where each row represents a point in the form (x, y).
-        
-        Returns
-        -------
-        ndarray
-            The predicted output values, an Nx2 array where each row represents a point in the form (x', y').
+        Calculate the distance between a keypoint and the model.
+
+        Parameters:
+            H - a 3x3 homography matrix
+            keypoint1 - a 2D keypoint in the form (x, y)
+            keypoint2 - a 2D keypoint in the form (x, y)
+
+        Returns:
+            d - the distance between the keypoint and the model
         """
-        # Add a third coordinate to the data points
-        data_homogeneous = np.hstack((data, np.ones((len(data), 1))))
+        # Transform the keypoint using the homography matrix
+        point1 = np.asarray([keypoint1.pt[0], keypoint1.pt[1], 1])
+        point2 = np.asarray([keypoint2.pt[0], keypoint2.pt[1], 1])
+        point2_transformed = np.dot(H, point1)
+        point2_transformed /= point2_transformed[2]
 
-        # Transform the data points using the homography matrix
-        transformed = np.dot(self.homography, data_homogeneous.T).T
+        # Calculate the distance between the transformed keypoint and the original keypoint
+        d = np.linalg.norm(point2 - point2_transformed)
 
-        # Normalize the transformed points
-        transformed[:, :2] /= transformed[:, 2:]
+        return d
 
-        return transformed[:, :2]
+    def get_error(self, H, keypoints1, keypoints2):
+        """
+        Calculate the total error between the model and the data.
+
+        Parameters:
+            H - a 3x3 homography matrix
+            keypoints1 - a set of 2D keypoints in the form (x, y)
+            keypoints2 - a set of 2D keypoints in the form (x, y)
+
+        Returns:
+            err - the total error between the model and the data
+        """
+        err = 0
+        for i in range(len(keypoints1)):
+            err += self.distance(H, keypoints1[i], keypoints2[i])
+        return err
 
 
-def ransac(data, model_class, min_samples, residual_threshold, max_trials):
+def ransac(keypoints1, keypoints2, model, n, k, t, d, debug=True):
     """
     Fit a model to data using the RANSAC algorithm.
-    
-    Parameters
-    ----------
-    data: ndarray
-        The input data in the form (x1, y1, x2, y2) for each index.
-    model_class: type
-        The class of the model to fit to the data.
-        The model should have a fit method and a predict method.
-    min_samples: int
-        The minimum number of samples required to fit the model.
-    residual_threshold: float
-        The maximum distance between a sample and the model that is considered
-        a good fit.
-    max_trials: int
-        The maximum number of iterations to perform before giving up.
-    
-    Returns
-    -------
-    model: object
-        The best fit model.
-    inliers: ndarray
-        The indices of the samples that fit the model well.
+
+    Parameters:
+        keypoints1 - a set of 2D keypoints in the form (x, y)
+        keypoints2 - a set of 2D keypoints in the form (x, y)
+        model - a model that can be fitted to data
+        n - the minimum number of data required to fit the model
+        k - the maximum number of iterations allowed in the algorithm
+        t - a threshold value for determining when a datum fits a model
+        d - the number of close data values required to assert that a model fits well to data
+        debug - an optional flag to indicate debugging mode
+
+    Returns:
+        bestfit - model parameters which best fit the data (or None if no good model is found)
     """
-    best_model = None
-    best_inliers = None
+    bestfit = None
+    besterr = np.inf
+    bestinliers = None
+    for i in range(k):
+        indexes = random.sample(range(len(keypoints1)), n)
+        maybeinliers1 = [keypoints1[i] for i in indexes]
+        maybeinliers2 = [keypoints2[i] for i in indexes]
+        # maybeinliers1, maybeinliers2 = random.sample(keypoints1, n), random.sample(keypoints2, n)
+        maybemodel = model.fit(maybeinliers1, maybeinliers2)
+        alsoinliers1, alsoinliers2 = [], []
+        inliers_index = []
+        for j in range(len(keypoints1)):
+            if model.distance(maybemodel, keypoints1[j], keypoints2[j]) < t:
+                alsoinliers1.append(keypoints1[j])
+                alsoinliers2.append(keypoints2[j])
+                inliers_index.append(j)
+        if len(alsoinliers1) > d:
+            bettermodel = model.fit(alsoinliers1, alsoinliers2)
+            thiserr = model.get_error(bettermodel, alsoinliers1, alsoinliers2)
+            if thiserr < besterr:
+                bestfit = bettermodel
+                besterr = thiserr
+                bestinliers = inliers_index
+    if debug:
+        print(f"best fit: {bestfit} with error {besterr}")
 
-    # Perform max_trials iterations
-    for trial in range(max_trials):
-        # Randomly select min_samples points from the data
-        indices = np.random.choice(len(data), min_samples, replace=False)
-        samples = data[indices]
-        # Fit a model to the samples
-        model = model_class()
-        model.fit(samples)
-        data_picture = data[:, 2:]
-        data_template = data[:, :2]
-
-        # Use the model to predict the remaining data points
-        predictions = model.predict(data_picture)
-
-        # Compute the residuals between the predictions and the actual data points
-        residuals = predictions - data_template
-        distance_vector = np.array([np.linalg.norm(i) for i in residuals])
-
-        # Count the number of inliers (samples that have a small residual)
-        inliers = np.sum(distance_vector < residual_threshold)
-
-        # If the model has more inliers than the current best model, update the best model
-        if best_inliers is None or inliers > best_inliers:
-            best_model = model
-            best_distance_vector = distance_vector
-            best_inliers = inliers
-    # Return the best fit model and the inliers
-
-    print(best_inliers)
-    print(model.homography)
-    filter = np.where(best_distance_vector < residual_threshold, True, False)
-    return best_model.homography, filter
+    return bestfit, bestinliers

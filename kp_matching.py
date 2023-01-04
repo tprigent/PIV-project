@@ -1,36 +1,14 @@
 import numpy as np
 
 
-def brute_force_matcher(descriptors1, descriptors2):
-    n_desc1 = descriptors1.shape[0]
-    n_desc2 = descriptors2.shape[0]
-
-    correspondences = []
-    used = np.zeros(n_desc2)
-
-    # Descriptors of the 1st set
-    for i in range(n_desc1):
-        descriptor1 = descriptors1[i]
-
-        best_match = None
-        min_distance = float('inf')
-
-        # Descriptors for the 2nd set
-        for j in range(n_desc2):
-            if used[j] != 1:
-                descriptor2 = descriptors2[j]
-
-                # Calculate the distance between the descriptors
-                distance = np.linalg.norm(descriptor1 - descriptor2)
-
-                # Check if j is better candidate
-                if distance < min_distance:
-                    best_match = j
-                    min_distance = distance
-
-        # Update result list with best candidate
-        if best_match is not None:
-            correspondences.append((i, best_match))
-            used[best_match] = 1
-
-    return correspondences
+def distance_matcher(descriptors1, descriptors2):
+    index1 = np.zeros(len(descriptors1))
+    index2 = np.zeros(len(descriptors1))
+    cnt_desc1 = 0
+    for template_descriptor in descriptors1:
+        distances = np.linalg.norm(template_descriptor - descriptors2, axis=1)
+        best_match = np.argmin(distances)
+        index1[cnt_desc1] = cnt_desc1
+        index2[cnt_desc1] = best_match
+        cnt_desc1 += 1
+    return index1, index2
