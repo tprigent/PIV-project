@@ -31,7 +31,7 @@ if __name__ == "__main__":
 
     # Use RANSAC to select the best matches
     homography_model = ransac.HomographyModel()
-    H, inliers_index = ransac.ransac(kp_t_match, kp_p_match, homography_model, n_data=8, n_iter=2000, th=1, n_validation=10)
+    H, inliers_index = ransac.ransac(kp_t_match, kp_p_match, homography_model, n_data=4, n_iter=2000, th=1, n_validation=10)
 
 #    matches_matrix = np.array([i for i in matches])
 #    new_matches = matches_matrix[filter]
