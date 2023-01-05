@@ -7,12 +7,15 @@ from Trans_func import transform_im
 
 if __name__ == "__main__":
 
+    template = cv2.imread('data/templateSNS.jpg')
+    picture = cv2.imread('data/rgb0001.jpg')
+
     # Extract key points and descriptors from images
-    kp_template, d_template = sift_detect.extract_kp_des('data/templateSNS.jpg', n_kpoints=200)
-    kp_picture, d_picture = sift_detect.extract_kp_des('data/rgb0001.jpg', n_kpoints=200)
+    kp_template, d_template = sift_detect.extract_kp_des(template)
+    kp_picture, d_picture = sift_detect.extract_kp_des(picture)
 
     # Find matches between descriptors
-    matches = kp_matching.brute_force_matcher(d_template, d_picture)
+    matches = kp_matching.distance_matcher(d_template, d_picture)
     samples = np.array([(kp_template[i].pt + kp_picture[j].pt) for (i, j) in matches])
     model = ransac.HomographyModel
     max_trials = len(samples)*30
