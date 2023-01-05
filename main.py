@@ -1,5 +1,7 @@
-import numpy as np
+import glob
 
+import numpy as np
+import os
 import ransac
 import sift_detect
 import kp_matching
@@ -7,6 +9,11 @@ import cv2  # for debug only
 from Trans_func import transform_im
 
 if __name__ == "__main__":
+
+    files = glob.glob('results/*')
+    for f in files:
+        os.remove(f)
+
     template = cv2.imread('data/templateSNS.jpg')
     picture = cv2.imread('data/rgb0001.jpg')
 
@@ -15,14 +22,16 @@ if __name__ == "__main__":
     kp_picture, d_picture = sift_detect.extract_kp_des(picture)
 
     # Find matches between descriptors
-    match_picture, match_template = kp_matching.distance_matcher(d_template, d_picture)
+    correspondences = kp_matching.distance_matcher(d_template, d_picture)
+    match_template = [correspondences[i] for i in range(len(correspondences))]
+    match_picture = [i for i in range(len(correspondences))]
 
     kp_t_match = [kp_template[int(i)] for i in match_template]
     kp_p_match = [kp_picture[int(i)] for i in match_picture]
 
     # Use RANSAC to select the best matches
     homography_model = ransac.HomographyModel()
-    H, inliers_index = ransac.ransac(kp_t_match, kp_p_match, homography_model, n=4, k=200, t=2, d=50)
+    H, inliers_index = ransac.ransac(kp_t_match, kp_p_match, homography_model, n_data=8, n_iter=2000, th=1, n_validation=10)
 
 #    matches_matrix = np.array([i for i in matches])
 #    new_matches = matches_matrix[filter]

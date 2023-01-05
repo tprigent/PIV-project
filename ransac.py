@@ -1,5 +1,6 @@
 import numpy as np
 import random
+from tqdm import tqdm
 
 
 class HomographyModel:
@@ -75,7 +76,7 @@ class HomographyModel:
         return err
 
 
-def ransac(keypoints1, keypoints2, model, n, k, t, d, debug=True):
+def ransac(keypoints1, keypoints2, model, n_data, n_iter, th, n_validation, debug=True):
     """
     Fit a model to data using the RANSAC algorithm.
 
@@ -95,8 +96,8 @@ def ransac(keypoints1, keypoints2, model, n, k, t, d, debug=True):
     bestfit = None
     besterr = np.inf
     bestinliers = None
-    for i in range(k):
-        indexes = random.sample(range(len(keypoints1)), n)
+    for i in tqdm(range(n_iter)):
+        indexes = random.sample(range(len(keypoints1)), n_data)
         maybeinliers1 = [keypoints1[i] for i in indexes]
         maybeinliers2 = [keypoints2[i] for i in indexes]
         # maybeinliers1, maybeinliers2 = random.sample(keypoints1, n), random.sample(keypoints2, n)
@@ -104,11 +105,11 @@ def ransac(keypoints1, keypoints2, model, n, k, t, d, debug=True):
         alsoinliers1, alsoinliers2 = [], []
         inliers_index = []
         for j in range(len(keypoints1)):
-            if model.distance(maybemodel, keypoints1[j], keypoints2[j]) < t:
+            if model.distance(maybemodel, keypoints1[j], keypoints2[j]) < th:
                 alsoinliers1.append(keypoints1[j])
                 alsoinliers2.append(keypoints2[j])
                 inliers_index.append(j)
-        if len(alsoinliers1) > d:
+        if len(alsoinliers1) > n_validation:
             bettermodel = model.fit(alsoinliers1, alsoinliers2)
             thiserr = model.get_error(bettermodel, alsoinliers1, alsoinliers2)
             if thiserr < besterr:
