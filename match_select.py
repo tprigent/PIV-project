@@ -95,21 +95,3 @@ def compute_error(homography, points1, points2):
 
     return err
 
-
-def measure_accuracy(homography, template_points, transformed_points):
-    template_points = np.array(template_points, dtype=np.int)
-    transformed_points = np.array(transformed_points, dtype=np.int)
-    # Transform the transformed points using the homography matrix
-    transformed_points_transformed = cv2.perspectiveTransform(transformed_points, homography)
-
-    # Align the transformed points with the template points
-    shift_y, shift_x = np.unravel_index(np.argmax(np.abs(np.fft.fftshift(np.fft.fft2(template_points)))),
-                                        template_points.shape)
-    shift_x -= template_points.shape[1] // 2
-    shift_y -= template_points.shape[0] // 2
-    transformed_points_transformed_aligned = transformed_points_transformed + (shift_x, shift_y)
-
-    # Calculate the MSE
-    mse = np.square(template_points - transformed_points_transformed_aligned).mean()
-
-    return mse
