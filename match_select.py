@@ -26,8 +26,8 @@ def ransac(keypoints1, keypoints2, n_iter, n_data, th, n_valid):
         model = compute_homography(candidates1, candidates2)
 
         # find inliers
-        mse = measure_accuracy(model, candidates1, candidates2)
-        print('mse = {}'.format(mse))
+        #mse = measure_accuracy(model, candidates1, candidates2)
+        #print('mse = {}'.format(mse))
         inliers1, inliers2, inlier_indexes = [], [], []
         for j in range(len(kpts1)):
             if distance(model, kpts1[j], kpts2[j]) < th:
