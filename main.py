@@ -5,6 +5,7 @@ import os
 import ransac
 import sift_detect
 import kp_matching
+import match_select
 import cv2  # for debug only
 from Trans_func import transform_im
 
@@ -18,8 +19,9 @@ if __name__ == "__main__":
     picture = cv2.imread('data/rgb0001.jpg')
 
     # Extract key points and descriptors from images
-    kp_template, d_template = sift_detect.extract_kp_des(template)
-    kp_picture, d_picture = sift_detect.extract_kp_des(picture)
+    n_keypoints = 1000
+    kp_template, d_template = sift_detect.extract_kp_des(template, n_keypoints)
+    kp_picture, d_picture = sift_detect.extract_kp_des(picture, n_keypoints)
 
     # Find matches between descriptors
     correspondences = kp_matching.distance_matcher(d_template, d_picture)
@@ -31,19 +33,27 @@ if __name__ == "__main__":
 
     # Use RANSAC to select the best matches
     homography_model = ransac.HomographyModel()
-    H, inliers_index = ransac.ransac(kp_t_match, kp_p_match, homography_model, n_data=4, n_iter=2000, th=1, n_validation=10)
-
-#    matches_matrix = np.array([i for i in matches])
-#    new_matches = matches_matrix[filter]
+    # H, inliers_index = ransac.ransac(kp_t_match, kp_p_match, homography_model, n_data=4, n_iter=2000, th=20, n_validation=20)
+    H, inliers_index = match_select.ransac(kp_t_match, kp_p_match, n_iter=200, n_data=4, th=1, n_valid=4)
+    if H is None:
+        exit(-1)
 
     ## DEBUG ONLY: show matched key points
 
-    matches_d = [cv2.DMatch(int(match_template[i]), int(match_picture[i]), 0) for i in range(len(match_template))]
-    result = cv2.drawMatches(template, kp_template, picture, kp_picture, matches_d, None)
-    cv2.imwrite('results/matchesKNN.jpg', result)
+    raw_matches = [cv2.DMatch(int(match_template[i]), int(match_picture[i]), 0) for i in range(len(match_template))]
+    raw_result = cv2.drawMatches(template, kp_template, picture, kp_picture, raw_matches, None)
+    cv2.imwrite('results/matches_raw.jpg', raw_result)
+
+    matches = [cv2.DMatch(int(match_template[i]), int(match_picture[i]), 0) for i in inliers_index]
+    result = cv2.drawMatches(template, kp_template, picture, kp_picture, matches, None)
+    cv2.imwrite('results/matches.jpg', result)
 
     new_frame = transform_im(H, 'data/rgb0001.jpg')
-    cv2.imwrite('results/result_after_im_transform.png', new_frame)
+    opencv_frame = cv2.warpPerspective(picture, H, template.shape[:2])
+
+    cv2.imwrite('results/im_transform.jpg', opencv_frame)
+    cv2.imwrite('results/im_opencv.jpg', new_frame)
+
 
     # cv2.waitKey(0)
     # cv2.destroyAllWindows()

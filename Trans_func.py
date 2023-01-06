@@ -15,8 +15,8 @@ def transform_vid(H_list, frame_list):
 # Returns None if H is not invertible
 def transform_im(H, frame):
     # Checks if H is an homography
-    if H[2, 2] != 1:
-        raise Exception("H(3,3) isn't equal to 1, the matrix is not an homography matrix")
+    # if H[2, 2] != 1:
+    #     raise Exception("H(3,3) isn't equal to 1, the matrix is not an homography matrix")
     # Create the original image matrix
     frame = cv2.imread(frame)
 
