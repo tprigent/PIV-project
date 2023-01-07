@@ -32,10 +32,11 @@ if __name__ == "__main__":
     kp_p_match = [kp_picture[int(i)] for i in match_picture]
 
     # Use RANSAC to select the best matches
-    homography_model = ransac.HomographyModel()
+    # homography_model = ransac.HomographyModel()
     # H, inliers_index = ransac.ransac(kp_t_match, kp_p_match, homography_model, n_data=4, n_iter=2000, th=20, n_validation=20)
     # H, inliers_index = match_select.ransac(kp_t_match, kp_p_match, n_iter=1000, n_data=4, th=2, n_valid=8)
     # H, inliers_index = match_select.ransac(kp_t_match, kp_p_match, n_iter=1000, n_data=4, th=2, n_valid=20)
+    # H, inliers_index = match_select.ransac(kp_t_match, kp_p_match, n_iter=1, n_data=4, th=2, n_valid=20)
     H, inliers_index = match_select.ransac(kp_t_match, kp_p_match, n_iter=1000, n_data=4, th=2, n_valid=20)
 
 
@@ -49,7 +50,7 @@ if __name__ == "__main__":
     result = cv2.drawMatches(template, kp_template, picture, kp_picture, matches, None)
     cv2.imwrite('results/matches.jpg', result)
 
-    new_frame = transform_im(H, 'data/rgb0001.jpg')
+    new_frame = transform_im(H, 'data/rgb0001.jpg', template.shape)
     opencv_frame = cv2.warpPerspective(picture, H, template.shape[:2])
 
     cv2.imwrite('results/im_transform.jpg', new_frame)

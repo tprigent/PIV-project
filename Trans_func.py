@@ -13,18 +13,19 @@ def transform_vid(H_list, frame_list):
 
 
 # Returns None if H is not invertible
-def transform_im(H, frame):
+def transform_im(H, frame, shape_template):
+
     # Checks if H is an homography
     # if H[2, 2] != 1:
     #     raise Exception("H(3,3) isn't equal to 1, the matrix is not an homography matrix")
     # Create the original image matrix
     frame = cv2.imread(frame)
 
-
     # Create variables that calculate the dimensions of the frames
     n_old, m_old, _ = np.shape(frame)
-    n_new, m_new, x_new = tuple((H@np.array([n_old, m_old, 1])))
-    n_new, m_new = (int(n_new / x_new), int(m_new / x_new))
+    n_new, m_new, _ = shape_template
+    # n_new, m_new, x_new = tuple((H.dot(np.array([m_old, n_old, 1]))))
+    # n_new, m_new = (int(n_new / x_new), int(m_new / x_new))
 
     # Create the new frame
     new_frame = np.zeros((n_new, m_new, 3)).astype(np.uint8)
@@ -42,7 +43,7 @@ def transform_im(H, frame):
             homo_coord = np.array([i, j, 1])
 
             # Retrieves the old coordinates to determine the pixel value
-            old_homo_coord = H_inv@homo_coord
+            old_homo_coord = H_inv.dot(homo_coord)
 
             # Convert back to cartesian
             x_old, y_old = int(old_homo_coord[0] / old_homo_coord[2]), int(old_homo_coord[1] / old_homo_coord[2])
@@ -53,17 +54,42 @@ def transform_im(H, frame):
 
     return new_frame
 
+    # test --------------------------
 
-# H = np.array([[2, 0, 0], [0, 1, 0], [0, 0, 1]])
-# img = "data/rgb0001.jpg"
-# original_img = cv2.imread(img)
-# transformed = transform_im(H, img)
-# grey = cv2.cvtColor(transformed, cv2.COLOR_BGR2GRAY)
-# print(np.array_equal(original_img, transformed))
-# #open_cv = cv2.warpPerspective(frame, H, (1000, 1000))
-#
-# cv2.imshow("original", original_img)
-# cv2.imshow("transed", transformed)
-# #cv2.imshow("cv", open_cv )
-#
-# cv2.waitKey()
+    # highest_x = 0
+    # lowest_x = 0
+    # highest_y = 0
+    # lowest_y = 0
+    #
+    # for i in range(n_old-1):
+    #     for j in range(m_old-1):
+    #         homo_coord = np.array([i, j, 1])
+    #         new_homo_coord = H.dot(homo_coord)
+    #         x_new, y_new = int(new_homo_coord[0] / new_homo_coord[2]), int(new_homo_coord[1] / new_homo_coord[2])
+    #         if x_new > highest_x:
+    #             highest_x = x_new
+    #         if x_new < lowest_x:
+    #             lowest_x = x_new
+    #         if y_new > highest_y:
+    #             highest_y = y_new
+    #         if y_new < lowest_y:
+    #             lowest_y = y_new
+    #
+    # n_new = highest_x - lowest_x
+    # m_new = highest_y - lowest_y
+    # # Create the new frame
+    # new_frame = np.zeros((n_new, m_new, 3)).astype(np.uint8)
+    # for i in range(n_old):
+    #     for j in range(m_old):
+    #         homo_coord = np.array([i, j, 1])
+    #         new_homo_coord = H.dot(homo_coord)
+    #         x_new, y_new = int((new_homo_coord[0]) / new_homo_coord[2]), int((new_homo_coord[1]) / new_homo_coord[2])
+    #         if 0 <= x_new - lowest_x < n_new and 0 <= y_new - lowest_y < m_new:
+    #             new_frame[x_new - lowest_x, y_new - lowest_y] = frame[i, j]
+    # A = np.array([[[0,0,0], [0,0,0]],
+    #               [[0,0,0], [0,0,0]]])
+    #
+    # print(A.shape)
+    # print(np.delete(A, np.where(A == [0, 0, 0], A)))
+    # new_frame = np.delete(new_frame, np.where(new_frame == [0, 0, 0]))
+    # return new_frame

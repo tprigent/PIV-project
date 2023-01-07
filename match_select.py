@@ -56,15 +56,15 @@ def compute_homography(points1, points2):  # fit function
 
     A = np.zeros((2 * n, 9))
     for i in range(n):
-        x, y = points1[i]
-        u, v = points2[i]
+        x, y = points2[i]
+        u, v = points1[i]
         A[2 * i] = [x, y, 1, 0, 0, 0, -u * x, -u * y, -u]
         A[2 * i + 1] = [0, 0, 0, x, y, 1, -v * x, -v * y, -v]
 
     _, _, V = np.linalg.svd(A)
     H = V[-1, :]
     H = H.reshape((3, 3))
-
+    H = H / H[-1, -1]
     return H
 
 
@@ -76,14 +76,14 @@ def distance(homography, point1, point2):
     h_point2 = np.asarray([int(u), int(v), 1])
 
     # apply homography to point2
-    new_point2 = np.dot(homography, h_point1)
+    new_point2 = np.dot(homography, h_point2)
 
     # get new point standard expression
     if new_point2[2] != 0:
         new_point2 /= new_point2[2]
 
     # compute distance between reference point and output point
-    d = np.linalg.norm(h_point2 - new_point2)
+    d = np.linalg.norm(h_point1 - new_point2)
 
     return d
 
