@@ -50,7 +50,7 @@ if __name__ == "__main__":
     result = cv2.drawMatches(template, kp_template, picture, kp_picture, matches, None)
     cv2.imwrite('results/matches.jpg', result)
 
-    new_frame = transform_im(H, 'data/rgb0001.jpg', template.shape)
+    new_frame = transform_im(H, 'data/rgb0001.jpg')
     opencv_frame = cv2.warpPerspective(picture, H, template.shape[:2])
 
     cv2.imwrite('results/im_transform.jpg', new_frame)
