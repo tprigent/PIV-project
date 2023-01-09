@@ -1,3 +1,4 @@
+from tqdm import tqdm
 import numpy as np
 import cv2
 
@@ -13,14 +14,12 @@ def transform_vid(H_list, transpose_frame_list):
 
 
 # Returns None if H is not invertible
-def transform_im(H, frame_path):
+def transform_im(H, frame, template):
 
     # Checks if H is an homography
     # if H[2, 2] != 1:
     #     raise Exception("H(3,3) isn't equal to 1, the matrix is not an homography matrix")
     # Create the original image matrix
-
-    frame = cv2.imread(frame_path)
     
     transpose_frame = np.zeros((frame.shape[1], frame.shape[0], frame.shape[2])).astype(np.uint8)
 
@@ -29,11 +28,12 @@ def transform_im(H, frame_path):
 
     # Create variables that calculate the dimensions of the transpose_frames
     n_old, m_old, _ = np.shape(transpose_frame)
-    n_new, m_new, x_new = tuple((H.dot(np.array([m_old, n_old, 1]))))
-    n_new, m_new = (int(n_new / x_new), int(m_new / x_new))
+    # n_new, m_new, x_new = tuple((H.dot(np.array([m_old, n_old, 1]))))
+    # n_new, m_new = (int(n_new / x_new), int(m_new / x_new))
+    n_new, m_new, _ = np.shape(template)
 
     # Create the new transpose_frame
-    new_frame = np.zeros((n_new, m_new, 3)).astype(np.uint8)
+    new_frame = np.zeros((m_new, n_new, 3)).astype(np.uint8)
 
     # Check if H is a singular matrix
     if np.linalg.det(H) != 0:
@@ -42,7 +42,7 @@ def transform_im(H, frame_path):
         return None
 
     # Calculate the values of the pixels of the new transpose_frame
-    for i, line in enumerate(new_frame):
+    for i, line in tqdm(enumerate(new_frame)):
         for j, pixel in enumerate(line):
             # Converts from cartesian to homogenous coordinates
             homo_coord = np.array([i, j, 1])

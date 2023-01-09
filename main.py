@@ -7,7 +7,7 @@ import sift_detect
 import kp_matching
 import match_select
 import cv2  # for debug only
-from Trans_func import transform_im
+from trans_func import transform_im
 
 if __name__ == "__main__":
 
@@ -16,7 +16,7 @@ if __name__ == "__main__":
         os.remove(f)
 
     template = cv2.imread('data/templateSNS.jpg')
-    picture = cv2.imread('data/rgb0001.jpg')
+    picture = cv2.imread('data/rgb0003.jpg')
 
     # Extract key points and descriptors from images
     n_keypoints = 200
@@ -37,7 +37,7 @@ if __name__ == "__main__":
     # H, inliers_index = match_select.ransac(kp_t_match, kp_p_match, n_iter=1000, n_data=4, th=2, n_valid=8)
     # H, inliers_index = match_select.ransac(kp_t_match, kp_p_match, n_iter=1000, n_data=4, th=2, n_valid=20)
     # H, inliers_index = match_select.ransac(kp_t_match, kp_p_match, n_iter=1, n_data=4, th=2, n_valid=20)
-    H, inliers_index = match_select.ransac(kp_t_match, kp_p_match, n_iter=1000, n_data=4, th=2, n_valid=20)
+    H, inliers_index = match_select.ransac(kp_t_match, kp_p_match, n_iter=1000, n_data=4, th=3, n_valid=20)
 
 
     ## DEBUG ONLY: show matched key points
@@ -50,7 +50,7 @@ if __name__ == "__main__":
     result = cv2.drawMatches(template, kp_template, picture, kp_picture, matches, None)
     cv2.imwrite('results/matches.jpg', result)
 
-    new_frame = transform_im(H, 'data/rgb0001.jpg')
+    new_frame = transform_im(H, picture, template)
     opencv_frame = cv2.warpPerspective(picture, H, template.shape[:2])
 
     cv2.imwrite('results/im_transform.jpg', new_frame)
