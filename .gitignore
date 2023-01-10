@@ -132,6 +132,5 @@ dmypy.json
 *.DS_Store
 *.idea/
 results/*
-delivery/input/*
-delivery/output/*
-delivery/template/*
+data/*
+template/*
