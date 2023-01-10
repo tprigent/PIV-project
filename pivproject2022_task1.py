@@ -6,25 +6,23 @@ from tqdm import tqdm
 
 
 def compute_homography_for_dataset(template_path, input_dir, output_dir):
-    extensions = ['.jpg', '.jpeg', '.png']
-    input_files = [f for f in os.listdir(input_dir) if any(f.endswith(ext) for ext in extensions)]
 
     # unpacking template data
     template_name = os.path.splitext(template_path)[0]
     template_mat = scipy.io.loadmat(template_name + '.mat')
-    kp_template = np.array(template_mat['p'][:200])
-    desc_template = np.array(template_mat['d'][:200])
+    kp_template = np.array(template_mat['p'])
+    desc_template = np.array(template_mat['d'])
 
-    iteration_counter = 1
+    files = os.listdir(input_dir)
+    num_input = int(len(files)/2)
 
-    for input_name_ext in tqdm(input_files):
-
-        input_name = os.path.splitext(input_name_ext)[0]
+    for iteration_counter in tqdm(range(1, num_input)):
 
         # unpacking input data
+        input_name = 'rgb{}'.format(str(iteration_counter).zfill(4))
         input_mat = scipy.io.loadmat(input_dir + input_name + '.mat')
-        kp_input = np.array(input_mat['p'][:200])
-        desc_input = np.array(input_mat['d'][:200])
+        kp_input = np.array(input_mat['p'])
+        desc_input = np.array(input_mat['d'])
 
         # raw matching descriptors
         correspondences = descriptor_matcher(descriptors1=desc_template.T, descriptors2=desc_input.T)
