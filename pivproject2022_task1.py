@@ -17,7 +17,10 @@ def compute_homography_for_dataset(template_path, input_dir, output_dir):
     files = os.listdir(input_dir)
     num_input = int(len(files)/2)
 
-    for iteration_counter in tqdm(range(1, num_input)):
+    start = 60
+    end = 70
+
+    for iteration_counter in tqdm(range(start, end)):
 
         # unpacking input data
         input_name = 'rgb{}'.format(str(iteration_counter).zfill(4))
@@ -38,13 +41,12 @@ def compute_homography_for_dataset(template_path, input_dir, output_dir):
         H = None
         tolerance = 0
         while H is None:
-            H, inliers_index = ransac(kp_t_match, kp_i_match, n_iter=100, n_data=4, th=3+tolerance, n_valid=20)
+            H, inliers_index = ransac(kp_t_match, kp_i_match, n_iter=100, n_data=4, th=30+tolerance, n_valid=20)
             tolerance += 1
 
         H_mat_name = 'H_{}.mat'.format(str(iteration_counter).zfill(4))
         scipy.io.savemat(output_dir + H_mat_name, {'H': H})
 
-        print(len(inliers_index))
         matches = [(int(match_template[i]), int(match_input[i]), 0) for i in inliers_index]
         render.draw_matches(kp_template.T, kp_input.T, matches, iteration_counter)
 
@@ -85,6 +87,7 @@ def ransac(kpts1, kpts2, n_iter, n_data, th, n_valid):
         if len(inliers1) > n_valid:
             best_model = compute_homography(points1=inliers1, points2=inliers2)
             curr_error = compute_error(best_model, points1=inliers1, points2=inliers2)
+            #curr_error/len(inliers1)
 
             # select best candidate
             if curr_error < min_error:
@@ -125,11 +128,11 @@ def distance(homography, point1, point2):
     new_point2 = np.dot(homography, h_point2)
 
     # get new point standard expression
-    if new_point2[2] != 0:
-        new_point2 /= new_point2[2]
+    #if new_point2[2] != 0:
+        #new_point2 /= new_point2[2]
 
-    new_point2 = new_point2[:2]
-    h_point1 = h_point1[:2]
+    #new_point2 = new_point2[:2]
+    #h_point1 = h_point1[:2]
 
     # compute distance between reference point and output point
     d = np.linalg.norm(h_point1 - new_point2)

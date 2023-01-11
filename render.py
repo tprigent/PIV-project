@@ -14,7 +14,10 @@ if __name__ == "__main__":
     files = os.listdir('data')
     num_input = int(len(files) / 2)
 
-    for iteration_counter in tqdm(range(1, num_input)):
+    start = 60
+    end = 70
+
+    for iteration_counter in tqdm(range(start, end)):
         input_name = 'data/rgb{}.jpg'.format(str(iteration_counter).zfill(4))
         input_frame = cv2.imread(input_name)
 
