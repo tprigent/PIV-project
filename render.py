@@ -14,8 +14,8 @@ if __name__ == "__main__":
     files = os.listdir('data')
     num_input = int(len(files) / 2)
 
-    start = 60
-    end = 70
+    start = 1
+    end = num_input
 
     for iteration_counter in tqdm(range(start, end)):
         input_name = 'data/rgb{}.jpg'.format(str(iteration_counter).zfill(4))
