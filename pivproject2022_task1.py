@@ -30,8 +30,8 @@ def compute_homography_for_dataset(template_path, input_dir, output_dir):
 
         # raw matching descriptors
         correspondences = descriptor_matcher(descriptors1=desc_template.T, descriptors2=desc_input.T)
-        match_template = [correspondences[i] for i in range(len(correspondences))]
-        match_input = [i for i in range(len(correspondences))]
+        match_template = [correspondences[i][0] for i in range(len(correspondences))]
+        match_input = [correspondences[i][1] for i in range(len(correspondences))]
 
         # get corresponding matched keypoints
         kp_t_match = [kp_template.T[int(i)] for i in match_template]
@@ -41,7 +41,7 @@ def compute_homography_for_dataset(template_path, input_dir, output_dir):
         H = None
         tolerance = 0
         while H is None:
-            H, inliers_index = ransac(kp_t_match, kp_i_match, n_iter=100, n_data=4, th=30+tolerance, n_valid=20)
+            H, inliers_index = ransac(kp_t_match, kp_i_match, n_iter=100, n_data=4, th=30+tolerance, n_valid=4)
             tolerance += 1
 
         H_mat_name = 'H_{}.mat'.format(str(iteration_counter).zfill(4))
@@ -54,9 +54,15 @@ def compute_homography_for_dataset(template_path, input_dir, output_dir):
 def descriptor_matcher(descriptors1, descriptors2):
 
     tree = scipy.spatial.cKDTree(descriptors1)
-    _, matches = tree.query(descriptors2)
+    distances, all_matches = tree.query(descriptors2)
 
-    return matches
+    matches = []
+
+    for i in range(len(distances)):
+        if distances[i] < 80:
+            matches.append([all_matches[i], i])
+
+    return np.asarray(matches)
 
 
 def ransac(kpts1, kpts2, n_iter, n_data, th, n_valid):
