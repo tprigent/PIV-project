@@ -1,5 +1,6 @@
 import os
 import cv2
+import time
 import scipy
 import trans_func
 import numpy as np
@@ -26,4 +27,29 @@ if __name__ == "__main__":
         new_frame_name = 'tf{}.jpg'.format(str(iteration_counter).zfill(4))
         cv2.imwrite('results/'+new_frame_name, new_frame)
 
-        iteration_counter += 1
+
+def draw_matches(points1, points2, matches, iteration):
+    image1 = cv2.imread('template/templateSNS.jpg')
+    im2_name = 'data/rgb{}.jpg'.format(str(iteration).zfill(4))
+    image2 = cv2.imread(im2_name)
+
+
+
+    # Create a new image to draw the lines on
+    pad_size = image1.shape[0] - image2.shape[0]
+    image2 = np.pad(image2, [(0, pad_size), (0, 0), (0, 0)], mode="constant")
+    matches_image = np.concatenate((image1, image2), axis=1)
+
+    # Draw the lines between the points
+    for i in range(len(matches)):
+        x, y = points1[matches[i][0]]
+        u, v = points2[matches[i][1]]
+        u = u + image1.shape[1]
+
+        cv2.line(matches_image, (int(x), int(y)), (int(u), int(v)), (255, 0, 0), 1)
+        cv2.circle(matches_image, (int(x), int(y)), 1, (0, 255, 0), 3)
+        cv2.circle(matches_image, (int(u), int(v)), 1, (0, 0, 255), 3)
+
+    # Return the image with the lines drawn on it
+    match_name = 'matching_{}.jpg'.format(str(iteration).zfill(4))
+    cv2.imwrite('results/'+match_name, matches_image)

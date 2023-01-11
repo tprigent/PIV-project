@@ -1,6 +1,7 @@
 import sys
 import os
 import scipy
+import render
 import numpy as np
 from tqdm import tqdm
 
@@ -42,7 +43,10 @@ def compute_homography_for_dataset(template_path, input_dir, output_dir):
 
         H_mat_name = 'H_{}.mat'.format(str(iteration_counter).zfill(4))
         scipy.io.savemat(output_dir + H_mat_name, {'H': H})
-        iteration_counter += 1
+
+        print(len(inliers_index))
+        matches = [(int(match_template[i]), int(match_input[i]), 0) for i in inliers_index]
+        render.draw_matches(kp_template.T, kp_input.T, matches, iteration_counter)
 
 
 def descriptor_matcher(descriptors1, descriptors2):
@@ -123,6 +127,9 @@ def distance(homography, point1, point2):
     # get new point standard expression
     if new_point2[2] != 0:
         new_point2 /= new_point2[2]
+
+    new_point2 = new_point2[:2]
+    h_point1 = h_point1[:2]
 
     # compute distance between reference point and output point
     d = np.linalg.norm(h_point1 - new_point2)
