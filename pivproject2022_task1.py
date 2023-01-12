@@ -9,7 +9,7 @@ import sift_detect
 
 
 def compute_homography_for_dataset(template_path, input_dir, output_dir):
-    given_keypoints = 0
+    given_keypoints = 1
 
 
     # unpacking template data
@@ -30,9 +30,9 @@ def compute_homography_for_dataset(template_path, input_dir, output_dir):
         kp_input, desc_input = get_keypoints(input_dir + input_name, given_keypoints)
 
         # raw matching descriptors
-        correspondences = descriptor_matcher(descriptors1=desc_template, descriptors2=desc_input)
-        match_template = [correspondences[i][0] for i in range(len(correspondences))]
-        match_input = [correspondences[i][1] for i in range(len(correspondences))]
+        correspondences = descriptor_matcher(descriptors1=desc_input, descriptors2=desc_template)
+        match_template = [correspondences[i][1] for i in range(len(correspondences))]
+        match_input = [correspondences[i][0] for i in range(len(correspondences))]
 
         # get corresponding matched keypoints
         kp_t_match = [kp_template[int(i)] for i in match_template]
@@ -43,7 +43,7 @@ def compute_homography_for_dataset(template_path, input_dir, output_dir):
         tolerance = 0
         while H is None:
             if given_keypoints:
-                H, inliers_index = ransac(kp_t_match, kp_i_match, n_iter=100, n_data=4, th=30+tolerance, n_valid=4)
+                H, inliers_index = ransac(kp_t_match, kp_i_match, n_iter=200, n_data=4, th=2+tolerance, n_valid=10)
             else:
                 H, inliers_index = ransac(kp_t_match, kp_i_match, n_iter=200, n_data=4, th=2+tolerance, n_valid=30)
             tolerance += 1
@@ -79,8 +79,8 @@ def descriptor_matcher(descriptors1, descriptors2):
     matches = []
 
     for i in range(len(distances)):
-        #if distances[i] < 80:
-        matches.append([all_matches[i], i])
+        if distances[i] < 120:
+            matches.append([all_matches[i], i])
 
     return np.asarray(matches)
 
@@ -113,7 +113,7 @@ def ransac(kpts1, kpts2, n_iter, n_data, th, n_valid):
         if len(inliers1) > n_valid:
             best_model = compute_homography(points1=inliers1, points2=inliers2)
             curr_error = compute_error(best_model, points1=inliers1, points2=inliers2)
-            #curr_error/len(inliers1)
+            curr_error/len(inliers1)
 
             # select best candidate
             if curr_error < min_error:
@@ -155,7 +155,9 @@ def distance(homography, point1, point2):
 
     # get new point standard expression
     if new_point2[2] != 0:
-        new_point2 /= new_point2[2]
+        new_point2[0] = new_point2[0]/new_point2[2]
+        new_point2[1] = new_point2[1]/new_point2[2]
+        new_point2[2] = 1
 
     #new_point2 = new_point2[:2]
     #h_point1 = h_point1[:2]
