@@ -40,7 +40,7 @@ def compute_homography_for_dataset(template_path, input_dir, output_dir):
         H = None
         tolerance = 0
         while H is None:
-            if tolerance > 3:
+            if tolerance > 2:
                 break
             if given_keypoints:
                 H, inliers_index = ransac(kp_t_match, kp_i_match, n_iter=200, n_data=4, th=2 + tolerance, n_valid=10)
@@ -48,15 +48,15 @@ def compute_homography_for_dataset(template_path, input_dir, output_dir):
                 H, inliers_index = ransac(kp_t_match, kp_i_match, n_iter=200, n_data=4, th=2 + tolerance, n_valid=30)
             tolerance += 1
 
-        if H is None:
+        if H is None or inliers_index is None:
             H = np.zeros((3, 3))
 
         H_mat_name = 'H_{}.mat'.format(str(iteration_counter).zfill(4))
         scipy.io.savemat(output_dir + H_mat_name, {'H': H})
 
         # Rendering matches
-        matches = [(int(match_template[i]), int(match_input[i]), 0) for i in inliers_index]
-        render.draw_matches(kp_template, kp_input, matches, iteration_counter)
+        # matches = [(int(match_template[i]), int(match_input[i]), 0) for i in inliers_index]
+        # render.draw_matches(kp_template, kp_input, matches, iteration_counter)
 
 
 def get_keypoints(image_name, given_keypoints=1):
@@ -118,7 +118,7 @@ def ransac(kpts1, kpts2, n_iter, n_data, th, n_valid):
         if len(inliers1) > n_valid:
             best_model = compute_homography(points1=inliers1, points2=inliers2)
             curr_error = compute_error(best_model, points1=inliers1, points2=inliers2)
-            curr_error / len(inliers1)
+            curr_error /= len(inliers1)
 
             # select best candidate
             if curr_error < min_error:

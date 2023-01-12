@@ -14,7 +14,7 @@ if __name__ == "__main__":
     files = os.listdir('data')
     num_input = int(len(files) / 2)
 
-    start = 16
+    start = 1
     end = num_input
 
     for iteration_counter in tqdm(range(start, end)):
@@ -25,10 +25,11 @@ if __name__ == "__main__":
         H_mat_packed = scipy.io.loadmat('results/'+H_mat_name)
         H = np.array(H_mat_packed['H'])
 
-        new_frame = trans_func.transform_im(H, input_frame, template_frame)
+        if H is not np.zeros((3, 3)):
+            new_frame = trans_func.transform_im(H, input_frame, template_frame)
 
-        new_frame_name = 'tf{}.jpg'.format(str(iteration_counter).zfill(4))
-        cv2.imwrite('results/'+new_frame_name, new_frame)
+            new_frame_name = 'tf{}.jpg'.format(str(iteration_counter).zfill(4))
+            cv2.imwrite('results/'+new_frame_name, new_frame)
 
 
 def draw_matches(points1, points2, matches, iteration):
