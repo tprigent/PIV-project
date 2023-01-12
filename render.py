@@ -14,7 +14,7 @@ if __name__ == "__main__":
     files = os.listdir('data')
     num_input = int(len(files) / 2)
 
-    start = 1
+    start = 16
     end = num_input
 
     for iteration_counter in tqdm(range(start, end)):
