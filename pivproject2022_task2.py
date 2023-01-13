@@ -45,7 +45,7 @@ def compute_homography_for_dataset(ref_number, input_dir, output_dir):
         tolerance = 0
         while H is None:
             if given_keypoints:
-                H, inliers_index = ransac(kp_t_match, kp_i_match, n_iter=200, n_data=4, th=2+tolerance, n_valid=20)
+                H, inliers_index = ransac(kp_t_match, kp_i_match, n_iter=200, n_data=4, th=5+tolerance, n_valid=20)
             else:
                 H, inliers_index = ransac(kp_t_match, kp_i_match, n_iter=200, n_data=4, th=2+tolerance, n_valid=30)
             tolerance += 1
@@ -81,7 +81,7 @@ def descriptor_matcher(descriptors1, descriptors2):
     matches = []
 
     for i in range(len(distances)):
-        if distances[i] < 120:
+        if distances[i] < 180:
             matches.append([all_matches[i], i])
 
     return np.asarray(matches)

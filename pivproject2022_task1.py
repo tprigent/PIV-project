@@ -55,13 +55,13 @@ def compute_homography_for_dataset(template_path, input_dir, output_dir):
         scipy.io.savemat(output_dir + H_mat_name, {'H': H})
 
         # Rendering matches
-        # matches = [(int(match_template[i]), int(match_input[i]), 0) for i in inliers_index]
-        # render.draw_matches(kp_template, kp_input, matches, iteration_counter)
+        matches = [(int(match_template[i]), int(match_input[i]), 0) for i in inliers_index]
+        render.draw_matches(kp_template, kp_input, matches, iteration_counter)
 
 
 def get_keypoints(image_name, given_keypoints=1):
     if given_keypoints:
-        matrix = scipy.io.loadmat(image_name + '.mat')
+        maix = scipy.io.loadmat(image_name + '.mat')
         kp = np.array(matrix['p']).T
         desc = np.array(matrix['d']).T
     else:
@@ -163,9 +163,6 @@ def distance(homography, point1, point2):
         new_point2[0] = new_point2[0] / new_point2[2]
         new_point2[1] = new_point2[1] / new_point2[2]
         new_point2[2] = 1
-
-    # new_point2 = new_point2[:2]
-    # h_point1 = h_point1[:2]
 
     # compute distance between reference point and output point
     d = np.linalg.norm(h_point1 - new_point2)
