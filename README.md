@@ -8,10 +8,11 @@ The problem has been solved in a limited amount of time (around 3 weeks). Result
 The global aim was, given the template (*i.e.* a scanned document) and a dataset composed of pictures of the 
 document being filled by someone, to correct the perspective as if the camera was above.
 
-One main objective was to avoid using the OpenCV library, which can solve this problem in a very few lines of code
+<p align="center">
+<img width="361" alt="Desired output" src="https://user-images.githubusercontent.com/14911193/212357370-b52fe776-9ee4-4847-ae8b-a673a4add034.png">
+</p>
 
-
-###### insert picture
+One main objective was to avoid using the OpenCV library, which can solve this problem in a very few lines of code.
 
 ## Steps
 The general algorithm involves multiple steps, which implies image processing techniques and algebra.
@@ -44,16 +45,27 @@ The general principle is the following:
 - If the global images as a certain number of inlier, recompute the homography on all the inliers and save it as current best result
 - Iterate the past steps a certain number of time, and replace the result if a better result is found
 
-In the end, we get the best homography possible between the input image and the shape of the template, according to the input parameters.
+<p align="center">
+<img width="500" src=https://user-images.githubusercontent.com/14911193/212359905-b4cd88e7-ba90-4b6a-b457-c973b6e8f46c.jpg>
+</p>
+
+In the end, we get the best homography possible between the input image and the shape of the template, according to the input parameters. We can see in the image above which keypoints have been taken into account.
 
 ### 4. Render the final result
 In this step, the homography is simply applied to the picture to get the final result. 
 
 As it was not requested in the evaluation, the code is present in the [render.py](render.py) file.
 
+| **Template** | **Input image** | **Result** |
+|--------------|-----------------|------------|
+| <img width=200 src=https://user-images.githubusercontent.com/14911193/212360729-bb907d7a-e6ac-4663-84a2-d63a64719c43.jpg> | <img width= 300 src=https://user-images.githubusercontent.com/14911193/212359993-5bafa257-dcb6-4375-b736-62d27be1213d.jpg>  |   <img width=200 src=https://user-images.githubusercontent.com/14911193/212359955-559955a8-a520-4e05-816b-01ba61dcbf01.jpg> |
+
+The images above show an example of what have been achieved during this project.
+
 
 ## Side task: panorama
 A second objective was to use the previous code to generate a panorama, using overlapping pictures.
+
 We simply had to compute the corresponding homography matrix (using a higher tolerance), and superimpose images.
 
 
@@ -82,7 +94,7 @@ python3 pivproject2022_task2.py nb_of_frames input_folder/ output_folder/
 ```
 
 ## References
-- PIV course and problematics, J.P Costeira & Carlos Jorge Andrade Mariz Santiago (IST, 2022)
+- PIV course and problematics, J.P Costeira & Carlos Santiago (IST, 2022)
 - OpenCV Python tutorials, [docs.opencv.org](https://docs.opencv.org/)
 - OpenCV Feature Matching — SIFT Algorithm, Druga Prasad on [Medium](https://medium.com/analytics-vidhya/opencv-feature-matching-sift-algorithm-scale-invariant-feature-transform-16672eafb253)
 - Image Stitching to create a Panorama, Naveksha Soof on [Medium](https://medium.com/@navekshasood/image-stitching-to-create-a-panorama-5e030ecc8f7)
