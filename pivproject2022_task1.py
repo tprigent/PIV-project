@@ -55,13 +55,14 @@ def compute_homography_for_dataset(template_path, input_dir, output_dir):
         scipy.io.savemat(output_dir + H_mat_name, {'H': H})
 
         # Rendering matches
-        matches = [(int(match_template[i]), int(match_input[i]), 0) for i in inliers_index]
-        render.draw_matches(kp_template, kp_input, matches, iteration_counter)
+        if inliers_index is not None:
+            matches = [(int(match_template[i]), int(match_input[i]), 0) for i in inliers_index]
+            render.draw_matches(kp_template, kp_input, matches, iteration_counter)
 
 
 def get_keypoints(image_name, given_keypoints=1):
     if given_keypoints:
-        maix = scipy.io.loadmat(image_name + '.mat')
+        matrix = scipy.io.loadmat(image_name + '.mat')
         kp = np.array(matrix['p']).T
         desc = np.array(matrix['d']).T
     else:
